@@ -1,1 +1,50 @@
-// TODO
+.post {
+  display: block;
+  transition: filter 0.2s;
+
+  &:hover {
+    filter: opacity(0.8);
+  }
+
+  & + .post {
+    margin-top: 3rem;
+  }
+
+  h1 {
+    font-weight: 700;
+    font-size: 1.75rem;
+  }
+
+  p {
+    margin: 0.5rem 0 1.5rem;
+    color: var(--gray-300);
+    font-size: 1.125rem;
+  }
+
+  div {
+    color: var(--gray-400);
+    display: flex;
+    gap: 1.625rem;
+  }
+
+  div > time,
+  div > span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+}
+
+.loadMore {
+  color: var(--pink);
+  font-size: 1.125rem;
+  font-weight: 600;
+  border: 0;
+  background-color: transparent;
+  margin-top: 4rem;
+  transition: filter 0.2s;
+
+  &:hover {
+    filter: brightness(0.9);
+  }
+}
