@@ -1,9 +1,9 @@
 import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import Link from 'next/link';
-import Header from '../components/Header';
 
 import { getPrismicClient } from '../services/prismic';
+import Prismic from '@prismicio/client';
 
 import common from '../styles/common.module.scss';
 import styles from './home.module.scss';
@@ -29,29 +29,8 @@ interface HomeProps {
   postsPagination: PostPagination;
 }
 
-export default function Home() {
-  const post1: Post = {
-    uid: '1',
-    first_publication_date: '2022-02-08',
-    data: {
-      title: 'Como utilizar hooks',
-      subtitle: 'Pensando em sincronização em vez de ciclos de vida.',
-      author: 'Joseph Oliveira',
-    },
-  };
-
-  const post2: Post = {
-    uid: '2',
-    first_publication_date: '2021-04-29',
-    data: {
-      title: 'Criando um app CRA do zero',
-      subtitle:
-        'Tudo sobre como criar a sua primeira aplicação utilizando Create React App',
-      author: 'Danilo Vieira',
-    },
-  };
-
-  const posts = [post1, post2];
+export default function Home({ postsPagination }: HomeProps) {
+  console.log(postsPagination);
 
   return (
     <>
@@ -60,7 +39,7 @@ export default function Home() {
       </Head>
 
       <main className={common.container}>
-        {posts.map((post: Post) => (
+        {postsPagination.results.map((post: Post) => (
           <Link key={post.uid} href={`/post/${post.uid}`}>
             <a className={styles.post}>
               <h1>{post.data.title}</h1>
@@ -77,15 +56,49 @@ export default function Home() {
           </Link>
         ))}
 
-        <button className={styles.loadMore}>Carregar mais posts</button>
+        {!!postsPagination.next_page && (
+          <button className={styles.loadMore}>Carregar mais posts</button>
+        )}
       </main>
     </>
   );
 }
 
-// export const getStaticProps = async () => {
-//   // const prismic = getPrismicClient();
-//   // const postsResponse = await prismic.query(TODO);
+export const getStaticProps: GetStaticProps = async () => {
+  const prismic = getPrismicClient();
 
-//   // TODO
-// };
+  const postsResponse = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts'),
+    {
+      fetch: ['posts.title', 'posts.subtitle', 'posts.author'],
+      pageSize: 10,
+    }
+  );
+
+  const nextPage = postsResponse.next_page;
+
+  const posts = postsResponse.results.map(post => ({
+    uid: post.uid,
+    first_publication_date: new Date(
+      post.first_publication_date
+    ).toLocaleDateString('pt-br', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    }),
+    data: {
+      title: post.data.title,
+      subtitle: post.data.subtitle,
+      author: post.data.author,
+    },
+  }));
+
+  return {
+    props: {
+      postsPagination: {
+        next_page: nextPage,
+        results: posts,
+      },
+    },
+  };
+};
