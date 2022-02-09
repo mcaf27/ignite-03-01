@@ -59,11 +59,9 @@ export default function Home() {
         <title>Home | spacetraveling</title>
       </Head>
 
-      <Header />
-
       <main className={common.container}>
         {posts.map((post: Post) => (
-          <Link key={post.uid} href={`/posts/${post.uid}`}>
+          <Link key={post.uid} href={`/post/${post.uid}`}>
             <a className={styles.post}>
               <h1>{post.data.title}</h1>
               <p>{post.data.subtitle}</p>
