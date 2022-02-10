@@ -1,1 +1,42 @@
-// TODO
+.bannerImg {
+  width: 100%;
+}
+
+.post {
+  header {
+    h1 {
+      margin: 5rem 0 1.5rem;
+      font-weight: 700;
+      font-size: 3rem;
+    }
+
+    div {
+      margin-bottom: 4rem;
+
+      span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        color: var(--gray-400);
+
+        & + span {
+          margin-left: 1.5rem;
+        }
+      }
+    }
+  }
+
+  section {
+    color: var(--gray-300);
+    margin-bottom: 5rem;
+    line-height: 140%;
+
+    div + div {
+      margin: 1rem 0;
+    }
+
+    h2 {
+      margin: 4rem 0;
+    }
+  }
+}
