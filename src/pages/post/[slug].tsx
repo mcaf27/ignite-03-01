@@ -138,7 +138,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   });
 
   const post = {
-    first_publication_date: formatDate(response.first_publication_date),
+    first_publication_date: response.first_publication_date,
     data: {
       author: response.data.author,
       banner: {
