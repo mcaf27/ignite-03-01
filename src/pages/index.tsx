@@ -36,11 +36,12 @@ interface HomeProps {
 const formatPosts = function (posts: any): Post[] {
   return posts.map(post => ({
     uid: post.uid,
-    first_publication_date: format(
-      new Date(post.first_publication_date),
-      'dd MMM yyyy',
-      { locale: ptBR }
-    ),
+    first_publication_date: post.first_publication_date,
+    // format(
+    //   new Date(post.first_publication_date),
+    //   'dd MMM yyyy',
+    //   { locale: ptBR }
+    // ),
     data: {
       title: post.data.title,
       subtitle: post.data.subtitle,
@@ -52,19 +53,20 @@ const formatPosts = function (posts: any): Post[] {
 export default function Home({ postsPagination }: HomeProps) {
   const [newPages, setNewPages] = useState([] as Post[]);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
-  const [loadMoreText, setLoadMoreText] = useState('Carregar mais posts');
 
   const fetchNextPage = async function (url: string) {
-    setLoadMoreText('...');
+    if (!!url) {
+      await fetch(url)
+        .then(res => res.json())
+        .then((res: PostPagination) => {
+          setNewPages([...newPages, ...formatPosts(res.results)]);
+          setNextPage(res.next_page);
+        });
+    }
+  };
 
-    await fetch(url)
-      .then(res => res.json())
-      .then((res: PostPagination) => {
-        setNewPages([...newPages, ...formatPosts(res.results)]);
-        setNextPage(res.next_page);
-        // console.log(res.next_page);
-        setLoadMoreText('Carregar mais posts');
-      });
+  const formatDate = function (date: string): string {
+    return format(new Date(date), 'dd MMM yyyy', { locale: ptBR });
   };
 
   return (
@@ -84,7 +86,7 @@ export default function Home({ postsPagination }: HomeProps) {
               <p>{post.data.subtitle}</p>
               <div>
                 <time>
-                  <FiCalendar /> {post.first_publication_date}
+                  <FiCalendar /> {formatDate(post.first_publication_date)}
                 </time>
                 <span>
                   <FiUser /> {post.data.author}
@@ -99,7 +101,7 @@ export default function Home({ postsPagination }: HomeProps) {
             onClick={() => fetchNextPage(nextPage)}
             className={styles.loadMore}
           >
-            {loadMoreText}
+            Carregar mais posts
           </button>
         )}
       </main>

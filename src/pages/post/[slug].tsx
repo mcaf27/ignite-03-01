@@ -3,19 +3,20 @@ import Head from 'next/head';
 
 import { getPrismicClient } from '../../services/prismic';
 import { RichText } from 'prismic-dom';
+import Prismic from '@prismicio/client';
 
 import common from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
-import { Fragment } from 'react';
+import { Fragment, useState } from 'react';
 
 import ptBR from 'date-fns/locale/pt-BR';
 import { format } from 'date-fns';
+import { useRouter } from 'next/router';
 
 interface Post {
   first_publication_date: string | null;
-  reading_time: string;
   data: {
     title: string;
     banner: {
@@ -35,7 +36,30 @@ interface PostProps {
   post: Post;
 }
 
+const formatDate = function (date: string): string {
+  return format(new Date(date), 'dd MMM yyyy', { locale: ptBR });
+};
+
 export default function Post({ post }: PostProps) {
+  const router = useRouter();
+
+  if (router.isFallback) {
+    return <h1>Carregando...</h1>;
+  }
+
+  const [readingTime] = useState(() => {
+    const words = post.data.content.reduce((acc, e) => {
+      const body = e.body.map(c => c.text.split(' ').length);
+      body.forEach(i => (acc += i));
+
+      acc += e.heading?.split(' ').length || 0;
+
+      return acc;
+    }, 0);
+
+    return Math.ceil(words / 200);
+  });
+
   return (
     <>
       <Head>
@@ -53,34 +77,26 @@ export default function Post({ post }: PostProps) {
           <h1>{post.data.title}</h1>
           <div>
             <span>
-              <FiCalendar /> {post.first_publication_date}
+              <FiCalendar /> {formatDate(post.first_publication_date)}
             </span>
             <span>
               <FiUser /> {post.data.author}
             </span>
             <span>
-              <FiClock /> {post.reading_time}
+              <FiClock /> {readingTime} min
             </span>
           </div>
         </header>
 
         <section>
-          {post.data.content.map((item, i) => {
-            if (!item.heading) {
-              return item.body.map((body, i) => (
-                <div key={i} dangerouslySetInnerHTML={{ __html: body.text }} />
-              ));
-            } else {
-              return (
-                <Fragment key={i}>
-                  <h2 dangerouslySetInnerHTML={{ __html: item.heading }} />
-                  {item.body.map(body => (
-                    <div dangerouslySetInnerHTML={{ __html: body.text }} />
-                  ))}
-                </Fragment>
-              );
-            }
-          })}
+          {post.data.content.map((item, i) => (
+            <Fragment key={i}>
+              <h2>{item.heading}</h2>
+              <div
+                dangerouslySetInnerHTML={{ __html: RichText.asHtml(item.body) }}
+              />
+            </Fragment>
+          ))}
         </section>
       </main>
     </>
@@ -88,12 +104,22 @@ export default function Post({ post }: PostProps) {
 }
 
 export const getStaticPaths: GetStaticPaths = async () => {
-  // const prismic = getPrismicClient();
-  // const posts = await prismic.query(TODO);
+  const prismic = getPrismicClient();
+
+  const posts = await prismic.query(
+    Prismic.Predicates.at('document.type', 'posts'),
+    { fetch: [], pageSize: 2 }
+  );
+
+  const slugs = posts.results.map(post => ({
+    params: {
+      slug: post.uid,
+    },
+  }));
 
   return {
-    paths: [],
-    fallback: 'blocking',
+    paths: slugs,
+    fallback: true,
   };
 };
 
@@ -101,31 +127,18 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   const { slug } = params;
 
   const prismic = getPrismicClient();
-  const response = await prismic.getByUID('posts', slug.toString(), {});
 
-  let words = 0;
+  const response = await prismic.getByUID('posts', slug?.toString(), {});
 
   const content = response.data.content.map(item => {
     return {
       heading: item.heading,
-      body: item.body.map(body => {
-        words += body.text.split(' ').length;
-        return {
-          text: RichText.asHtml([body]),
-        };
-      }),
+      body: [...item.body],
     };
   });
 
-  console.log(words);
-
-  const post: Post = {
-    first_publication_date: format(
-      new Date(response.first_publication_date),
-      'dd MMM yyyy',
-      { locale: ptBR }
-    ),
-    reading_time: `${Math.ceil(words / 200)} min`,
+  const post = {
+    first_publication_date: formatDate(response.first_publication_date),
     data: {
       author: response.data.author,
       banner: {
@@ -133,7 +146,9 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       },
       content,
       title: response.data.title,
+      subtitle: response.data.subtitle,
     },
+    uid: response.uid,
   };
 
   return {
