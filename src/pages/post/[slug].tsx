@@ -10,6 +10,9 @@ import styles from './post.module.scss';
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 import { Fragment } from 'react';
 
+import ptBR from 'date-fns/locale/pt-BR';
+import { format } from 'date-fns';
+
 interface Post {
   first_publication_date: string | null;
   reading_time: string;
@@ -117,13 +120,11 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   console.log(words);
 
   const post: Post = {
-    first_publication_date: new Date(
-      response.first_publication_date
-    ).toLocaleDateString('pt-br', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    }),
+    first_publication_date: format(
+      new Date(response.first_publication_date),
+      'dd MMM yyyy',
+      { locale: ptBR }
+    ),
     reading_time: `${Math.ceil(words / 200)} min`,
     data: {
       author: response.data.author,
