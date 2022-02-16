@@ -20,6 +20,7 @@ import { ExitPreview } from '../../components/ExitPreview';
 
 interface Post {
   first_publication_date: string | null;
+  editedText: string;
   data: {
     title: string;
     banner: {
@@ -57,8 +58,6 @@ const formatDate = function (date: string): string {
 };
 
 export default function Post({ post, preview, navigation }: PostProps) {
-  console.log(navigation);
-
   const router = useRouter();
 
   if (router.isFallback) {
@@ -104,6 +103,7 @@ export default function Post({ post, preview, navigation }: PostProps) {
               <FiClock /> {readingTime} min
             </span>
           </div>
+          <span>{post.editedText}</span>
         </header>
 
         <section>
@@ -180,6 +180,8 @@ export const getStaticProps: GetStaticProps = async ({
     ref: previewData?.ref || null,
   });
 
+  console.log(response);
+
   const previous = await prismic.query(
     Prismic.predicates.dateBefore(
       'document.first_publication_date',
@@ -217,8 +219,6 @@ export const getStaticProps: GetStaticProps = async ({
           },
   };
 
-  // console.log(previous, next);
-
   const content = response.data.content.map(item => {
     return {
       heading: item.heading,
@@ -226,8 +226,17 @@ export const getStaticProps: GetStaticProps = async ({
     };
   });
 
+  const editedText =
+    response.first_publication_date === response.last_publication_date
+      ? ''
+      : format(
+          new Date(response.last_publication_date),
+          "'* editado em' dd MMM yyyy', às' HH':'mm"
+        );
+
   const post = {
     first_publication_date: response.first_publication_date,
+    editedText,
     data: {
       author: response.data.author,
       banner: {
@@ -235,9 +244,7 @@ export const getStaticProps: GetStaticProps = async ({
       },
       content,
       title: response.data.title,
-      // subtitle: response.data.subtitle,
     },
-    // uid: response.uid,
   };
 
   return {

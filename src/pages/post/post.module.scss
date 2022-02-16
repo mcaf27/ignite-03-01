@@ -24,6 +24,14 @@
         }
       }
     }
+
+    & > span {
+      display: block;
+      margin-top: -3rem;
+      color: var(--gray-400);
+      font-style: italic;
+      font-size: 0.875rem;
+    }
   }
 
   section {
