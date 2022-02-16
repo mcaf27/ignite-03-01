@@ -1,5 +1,7 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
+import { useRouter } from 'next/router';
+import { Fragment, useState } from 'react';
 
 import { getPrismicClient } from '../../services/prismic';
 import { RichText } from 'prismic-dom';
@@ -9,11 +11,10 @@ import common from '../../styles/common.module.scss';
 import styles from './post.module.scss';
 
 import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
-import { Fragment, useState } from 'react';
 
 import ptBR from 'date-fns/locale/pt-BR';
 import { format } from 'date-fns';
-import { useRouter } from 'next/router';
+import Comments from '../../components/Comments';
 
 interface Post {
   first_publication_date: string | null;
@@ -60,6 +61,11 @@ export default function Post({ post }: PostProps) {
     return Math.ceil(words / 200);
   });
 
+  const options = {
+    repo: 'https://github.com/mcaf27/ignite-03-01',
+    theme: 'photon-dark',
+  };
+
   return (
     <>
       <Head>
@@ -98,6 +104,8 @@ export default function Post({ post }: PostProps) {
             </Fragment>
           ))}
         </section>
+
+        <Comments />
       </main>
     </>
   );
@@ -146,9 +154,9 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
       },
       content,
       title: response.data.title,
-      subtitle: response.data.subtitle,
+      // subtitle: response.data.subtitle,
     },
-    uid: response.uid,
+    // uid: response.uid,
   };
 
   return {
