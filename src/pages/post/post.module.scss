@@ -31,12 +31,64 @@
     margin-bottom: 5rem;
     line-height: 140%;
 
-    div + div {
-      margin: 1rem 0;
+    h2 {
+      font-size: 2.25rem;
+      margin: 4rem 0;
     }
 
-    h2 {
-      margin: 4rem 0;
+    div {
+      & + div {
+        margin: 1rem 0;
+      }
+
+      p {
+        margin: 1rem 0;
+        font-size: 1.125rem;
+      }
+    }
+  }
+
+  hr {
+    border: 0;
+    border-top: 1px solid var(--gray-300);
+    opacity: 0.1;
+  }
+
+  & > div {
+    display: flex;
+
+    a {
+      transition: filter 0.2s;
+      margin: 3rem 0 4rem;
+      max-width: 45%;
+      color: var(--gray-100);
+      font-size: 1rem;
+
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 4rem;
+
+      &:hover {
+        filter: brightness(0.8);
+      }
+
+      &.previous {
+        margin-right: auto;
+      }
+
+      &.next {
+        margin-left: auto;
+        text-align: right;
+      }
+
+      span {
+        font-size: 0.875rem;
+        display: block;
+        color: var(--pink);
+        font-weight: 600;
+        margin-top: 0.5rem;
+      }
     }
   }
 }

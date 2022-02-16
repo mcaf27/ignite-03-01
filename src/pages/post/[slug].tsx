@@ -1,5 +1,6 @@
 import { GetStaticPaths, GetStaticProps } from 'next';
 import Head from 'next/head';
+import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { Fragment, useState } from 'react';
 
@@ -34,16 +35,30 @@ interface Post {
   };
 }
 
+interface PostNavigation {
+  previous: {
+    slug: string;
+    title: string;
+  };
+  next: {
+    slug: string;
+    title: string;
+  };
+}
+
 interface PostProps {
   post: Post;
   preview: boolean;
+  navigation: PostNavigation;
 }
 
 const formatDate = function (date: string): string {
   return format(new Date(date), 'dd MMM yyyy', { locale: ptBR });
 };
 
-export default function Post({ post, preview }: PostProps) {
+export default function Post({ post, preview, navigation }: PostProps) {
+  console.log(navigation);
+
   const router = useRouter();
 
   if (router.isFallback) {
@@ -102,6 +117,28 @@ export default function Post({ post, preview }: PostProps) {
           ))}
         </section>
 
+        <hr />
+
+        <div>
+          {!!navigation.previous && (
+            <Link href={`/post/${navigation.previous.slug}`}>
+              <a className={styles.previous}>
+                {navigation.previous.title}
+                <span>Post anterior</span>
+              </a>
+            </Link>
+          )}
+
+          {!!navigation.next && (
+            <Link href={`/post/${navigation.next.slug}`}>
+              <a className={styles.next}>
+                {navigation.next.title}
+                <span>Próximo post</span>
+              </a>
+            </Link>
+          )}
+        </div>
+
         <ExitPreview preview={preview} />
 
         <Comments />
@@ -143,6 +180,45 @@ export const getStaticProps: GetStaticProps = async ({
     ref: previewData?.ref || null,
   });
 
+  const previous = await prismic.query(
+    Prismic.predicates.dateBefore(
+      'document.first_publication_date',
+      response.first_publication_date
+    ),
+    {
+      pageSize: 1,
+    }
+  );
+
+  const next = await prismic.query(
+    Prismic.predicates.dateAfter(
+      'document.first_publication_date',
+      response.first_publication_date
+    ),
+    {
+      pageSize: 1,
+    }
+  );
+
+  const navigation: PostNavigation = {
+    previous:
+      previous.results_size === 0
+        ? null
+        : {
+            slug: previous.results[0].uid,
+            title: previous.results[0].data.title,
+          },
+    next:
+      next.results_size === 0
+        ? null
+        : {
+            slug: next.results[0].uid,
+            title: next.results[0].data.title,
+          },
+  };
+
+  // console.log(previous, next);
+
   const content = response.data.content.map(item => {
     return {
       heading: item.heading,
@@ -168,6 +244,7 @@ export const getStaticProps: GetStaticProps = async ({
     props: {
       post,
       preview,
+      navigation,
     },
   };
 };
