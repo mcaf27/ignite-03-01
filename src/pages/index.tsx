@@ -13,6 +13,7 @@ import { FiCalendar, FiUser } from 'react-icons/fi';
 
 import ptBR from 'date-fns/locale/pt-BR';
 import { format } from 'date-fns';
+import { ExitPreview } from '../components/ExitPreview';
 
 interface Post {
   uid?: string;
@@ -31,6 +32,7 @@ interface PostPagination {
 
 interface HomeProps {
   postsPagination: PostPagination;
+  preview: boolean;
 }
 
 const formatPosts = function (posts: any): Post[] {
@@ -50,7 +52,7 @@ const formatPosts = function (posts: any): Post[] {
   }));
 };
 
-export default function Home({ postsPagination }: HomeProps) {
+export default function Home({ postsPagination, preview }: HomeProps) {
   const [newPages, setNewPages] = useState([] as Post[]);
   const [nextPage, setNextPage] = useState(postsPagination.next_page);
 
@@ -104,19 +106,14 @@ export default function Home({ postsPagination }: HomeProps) {
             Carregar mais posts
           </button>
         )}
+
+        <ExitPreview preview={preview} />
       </main>
     </>
   );
 }
 
-export const getStaticPaths: GetStaticPaths = async () => {
-  return {
-    paths: [],
-    fallback: true,
-  };
-};
-
-export const getStaticProps: GetStaticProps = async () => {
+export const getStaticProps: GetStaticProps = async ({ preview = false }) => {
   const prismic = getPrismicClient();
 
   const postsResponse = await prismic.query(
@@ -137,6 +134,7 @@ export const getStaticProps: GetStaticProps = async () => {
         next_page: nextPage,
         results: posts,
       },
+      preview,
     },
   };
 };

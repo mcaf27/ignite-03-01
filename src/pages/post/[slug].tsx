@@ -15,6 +15,7 @@ import { FiCalendar, FiUser, FiClock } from 'react-icons/fi';
 import ptBR from 'date-fns/locale/pt-BR';
 import { format } from 'date-fns';
 import Comments from '../../components/Comments';
+import { ExitPreview } from '../../components/ExitPreview';
 
 interface Post {
   first_publication_date: string | null;
@@ -35,13 +36,14 @@ interface Post {
 
 interface PostProps {
   post: Post;
+  preview: boolean;
 }
 
 const formatDate = function (date: string): string {
   return format(new Date(date), 'dd MMM yyyy', { locale: ptBR });
 };
 
-export default function Post({ post }: PostProps) {
+export default function Post({ post, preview }: PostProps) {
   const router = useRouter();
 
   if (router.isFallback) {
@@ -60,11 +62,6 @@ export default function Post({ post }: PostProps) {
 
     return Math.ceil(words / 200);
   });
-
-  const options = {
-    repo: 'https://github.com/mcaf27/ignite-03-01',
-    theme: 'photon-dark',
-  };
 
   return (
     <>
@@ -105,6 +102,8 @@ export default function Post({ post }: PostProps) {
           ))}
         </section>
 
+        <ExitPreview preview={preview} />
+
         <Comments />
       </main>
     </>
@@ -131,12 +130,18 @@ export const getStaticPaths: GetStaticPaths = async () => {
   };
 };
 
-export const getStaticProps: GetStaticProps = async ({ params }) => {
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
   const { slug } = params;
 
   const prismic = getPrismicClient();
 
-  const response = await prismic.getByUID('posts', slug?.toString(), {});
+  const response = await prismic.getByUID('posts', slug?.toString(), {
+    ref: previewData?.ref || null,
+  });
 
   const content = response.data.content.map(item => {
     return {
@@ -162,6 +167,7 @@ export const getStaticProps: GetStaticProps = async ({ params }) => {
   return {
     props: {
       post,
+      preview,
     },
   };
 };
